@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String             @id @default(uuid())
+  username    String             @unique
+  email       String             @unique
+  password    String
+  displayName String?
+  bio         String?
+  avatarUrl   String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  fleets      Fleet[]            @relation("UserFleets")
+  likes       Like[]             @relation("UserLikes")
+  followers   FollowerRelation[] @relation("Followers")
+  following   FollowerRelation[] @relation("Following")
+}
+
+model Fleet {
+  id           String         @id @default(uuid())
+  content      String
+  userId       String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  user         User           @relation("UserFleets", fields: [userId], references: [id])
+  comments     FleetComment[] @relation("FleetComments")
+  likes        Like[]         @relation("FleetLikes")
+  FleetComment FleetComment[]
+  FleetComment FleetComment[]
+}
+
+model FleetComment {
+  id        String   @id @default(uuid())
+  fleetId   String
+  commentId String
+  createdAt DateTime @default(now())
+  fleet     Fleet    @relation("FleetComments", fields: [fleetId], references: [id])
+  comment   Fleet    @relation("FleetComment", fields: [commentId], references: [id])
+  Fleet     Fleet    @relation(fields: [fleetId], references: [id])
+
+  @@unique([fleetId, commentId])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  fleetId   String
+  userId    String
+  createdAt DateTime @default(now())
+  fleet     Fleet    @relation("FleetLikes", fields: [fleetId], references: [id])
+  user      User     @relation("UserLikes", fields: [userId], references: [id])
+}
+
+model FollowerRelation {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("Followers", fields: [followerId], references: [id])
+  following   User     @relation("Following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+}
