@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  postgresql:
+    container_name: database
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fleeter
+    ports:
+      - "5432:5432"
+#    volumes:
+#      - ./config/database/:/docker-entrypoint-initdb.d/
+#      - ./postgresql-data:/var/lib/postgresql/data
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: clementsangiorgio@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_SERVER_REGISTRATION: '[
+              {
+                "name": "My Database",
+                "host": "postgresql",
+                "port": 5432,
+                "username": "postgres",
+                "password": "password",
+                "sslmode": "disable"
+              }
+            ]'
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgresql
+  app:
+    restart: always
+    container_name: app
+    build: app/.
+    depends_on:
+      - postgresql
+#    environment:
+#      DATABASE_URL: postgresql://postgres:password@postgresql:5432/fleeter
+#      TZ: UTC
+    ports:
+      - "3000:3000"
